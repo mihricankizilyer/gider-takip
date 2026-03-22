@@ -4,8 +4,6 @@ const BUDGET_KEY = "gider-takip-budgets-v1";
 const CHART_VIEW_KEY = "gider-takip-chart-view-v1";
 const CHART_VIEW_IDS = ["month-pie", "month-bar", "trend", "sub", "budget"];
 const SHARED_BUNDLE_FILENAME = "paylasilan-veri.json";
-let serverSqliteSync = false;
-let serverPushTimer = null;
 
 const CHART_PALETTE = [
   "#a78bfa",
@@ -74,7 +72,6 @@ function loadCategories() {
 
 function saveCategories(categories) {
   localStorage.setItem(CATEGORIES_KEY, JSON.stringify({ version: 1, categories }));
-  schedulePushToServer();
 }
 
 function loadBudgets() {
@@ -96,7 +93,6 @@ function loadBudgets() {
 
 function saveBudgets(map) {
   localStorage.setItem(BUDGET_KEY, JSON.stringify(map));
-  schedulePushToServer();
 }
 
 function loadExpenses() {
@@ -112,7 +108,6 @@ function loadExpenses() {
 
 function saveExpenses(items) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
-  schedulePushToServer();
 }
 
 function allExpensesNormalized() {
@@ -1785,77 +1780,6 @@ function applyImportedExpenses(valid, categoriesMaybe, budgetsMaybe, opts = {}) 
   return true;
 }
 
-async function refreshServerSqliteFlag() {
-  try {
-    const r = await fetch(new URL("/health", window.location.href), { cache: "no-store" });
-    if (!r.ok) {
-      serverSqliteSync = false;
-      return;
-    }
-    const j = await r.json();
-    serverSqliteSync = Boolean(j && j.ok === true && j.sqlite === true);
-  } catch {
-    serverSqliteSync = false;
-  }
-}
-
-function buildExportBundleForServer() {
-  return {
-    version: 2,
-    exportedAt: new Date().toISOString(),
-    categories: loadCategories(),
-    expenses: loadExpenses().map(normalizeExpense),
-    budgets: loadBudgets(),
-  };
-}
-
-async function pushBundleToServerQuiet() {
-  if (!serverSqliteSync) return;
-  try {
-    const r = await fetch(new URL("/api/bundle", window.location.href), {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(buildExportBundleForServer()),
-    });
-    if (!r.ok) throw new Error(String(r.status));
-  } catch {}
-}
-
-function schedulePushToServer() {
-  if (!serverSqliteSync) return;
-  clearTimeout(serverPushTimer);
-  serverPushTimer = setTimeout(() => {
-    void pushBundleToServerQuiet();
-  }, 900);
-}
-
-async function tryLoadApiBundle() {
-  try {
-    const url = new URL("/api/bundle", window.location.href);
-    url.searchParams.set("_cb", String(Date.now()));
-    const r = await fetch(url.href, { cache: "no-store" });
-    if (!r.ok) return false;
-    const parsed = await r.json();
-    if (!parsed || typeof parsed !== "object" || parsed.version !== 2 || !Array.isArray(parsed.expenses)) {
-      return false;
-    }
-    const valid = parsed.expenses.filter(
-      (x) =>
-        x &&
-        typeof x.amount === "number" &&
-        (typeof x.description === "string" || x.description == null) &&
-        typeof x.date === "string" &&
-        (typeof x.categoryId === "string" || typeof x.category === "string")
-    );
-    const hasCats = parsed.categories && Array.isArray(parsed.categories) && parsed.categories.length > 0;
-    if (valid.length === 0 && !hasCats) return false;
-    applyImportedExpenses(valid, parsed.categories, parsed.budgets, { allowEmptyExpenses: true });
-    return true;
-  } catch {
-    return false;
-  }
-}
-
 async function tryLoadSharedBundle() {
   try {
     const url = new URL(SHARED_BUNDLE_FILENAME, window.location.href);
@@ -2011,12 +1935,7 @@ if (tabChartsBtn) tabChartsBtn.addEventListener("click", () => activateAppTab("c
 if (tabCategoriesBtn) tabCategoriesBtn.addEventListener("click", () => activateAppTab("categories"));
 
 async function initApp() {
-  await refreshServerSqliteFlag();
-  let apiLoaded = false;
-  if (serverSqliteSync) {
-    apiLoaded = await tryLoadApiBundle();
-  }
-  const sharedOk = !apiLoaded && (await tryLoadSharedBundle());
+  const sharedOk = await tryLoadSharedBundle();
   filterMonth.value = currentMonthFilter();
   syncExpenseDateToSelectedMonth();
   loadCategories();
@@ -2024,8 +1943,7 @@ async function initApp() {
   refreshCategorySelects();
   setChartView(loadChartViewPreference());
   render();
-  if (apiLoaded) showToast("Veritabanından yüklendi.");
-  else if (sharedOk) showToast("Paylaşılan veri yüklendi.");
+  if (sharedOk) showToast("Paylaşılan veri yüklendi.");
 }
 
 initApp();

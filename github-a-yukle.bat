@@ -13,5 +13,12 @@ if errorlevel 1 (
     pause
     exit /b 1
 )
-echo Tamamlandi.
+echo.
+echo [INTERNETTEN ERISIM - GitHub Pages]
+echo Repo GitHub'da. Simdi: Repo sayfasinda Settings ^> Pages ^> Source:
+echo   Branch: main, Folder: / (root) sec, Save.
+echo Ardindan su adresten her yerden eris:
+echo   https://KULLANICI_ADIN.github.io/gider-takip/
+echo   (KULLANICI_ADIN yerine kendi GitHub kullanici adini yaz)
+echo.
 pause
