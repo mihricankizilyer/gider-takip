@@ -1,0 +1,3 @@
+# Kişisel paylaşım anlığı; depoya girmesini istemiyorsan açık bırak.
+# Herkese aynı veriyi göstermek için Netlify/GitHub'a yüklüyorsan bu satırı sil veya: git add -f paylasilan-veri.json
+paylasilan-veri.json

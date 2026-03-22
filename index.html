@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#06060f" />
+    <title>Gider Takibi</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400..700&family=Space+Grotesk:wght@500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css?v=43" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.1/dist/chart.umd.min.js" defer></script>
+  </head>
+  <body>
+    <div class="app">
+      <header class="header">
+        <div class="header__brand">
+          <h1 class="header__title">Gider Takibi</h1>
+          <p class="header__subtitle">
+            Veriler yalnızca bu cihazda tutulur. Üstteki dönem seçimi tüm bölümlerde geçerlidir.
+          </p>
+        </div>
+        <div class="header__summary" id="summary">
+          <div class="header__summary-grid">
+            <div class="header__period">
+              <label class="header__period-label" for="filterMonth">Dönem</label>
+              <div class="header__period-nav" role="group" aria-label="Dönem (ay) seçimi">
+                <button type="button" class="btn-month-nav" id="monthPrev" aria-label="Önceki ay" title="Önceki ay">
+                  ‹
+                </button>
+                <input class="field__input field__input--month" type="month" id="filterMonth" name="filterMonth" />
+                <button type="button" class="btn-month-nav" id="monthNext" aria-label="Sonraki ay" title="Sonraki ay">
+                  ›
+                </button>
+              </div>
+            </div>
+            <div class="header__summary-main">
+              <span class="summary__label">Dönem toplamı</span>
+              <span class="summary__amount" id="monthTotal">0,00 ₺</span>
+              <span class="summary__hint" id="summaryPeriodHint"></span>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <nav class="tabs" role="tablist" aria-label="Ana bölümler">
+        <button
+          type="button"
+          role="tab"
+          id="tab-records"
+          class="tabs__btn tabs__btn--active"
+          aria-selected="true"
+          aria-controls="panel-records"
+        >
+          Kayıtlar
+        </button>
+        <button
+          type="button"
+          role="tab"
+          id="tab-expense"
+          class="tabs__btn"
+          aria-selected="false"
+          aria-controls="panel-expense"
+        >
+          Yeni gider
+        </button>
+        <button
+          type="button"
+          role="tab"
+          id="tab-charts"
+          class="tabs__btn"
+          aria-selected="false"
+          aria-controls="panel-charts"
+        >
+          Raporlar
+        </button>
+        <button
+          type="button"
+          role="tab"
+          id="tab-categories"
+          class="tabs__btn"
+          aria-selected="false"
+          aria-controls="panel-categories"
+        >
+          Kategoriler
+        </button>
+      </nav>
+
+      <div id="panel-records" class="tab-panel" role="tabpanel" aria-labelledby="tab-records">
+        <main class="main main--single">
+          <section class="card list-card" aria-labelledby="list-heading">
+            <h2 id="list-heading" class="card__title">Dönem kayıtları</h2>
+            <div class="records-toolbar">
+              <label class="field records-toolbar__field">
+                <span class="field__label">Açıklamada ara</span>
+                <input
+                  type="search"
+                  id="recordsSearch"
+                  class="field__input"
+                  placeholder="Açıklama veya not"
+                  autocomplete="off"
+                />
+              </label>
+              <label class="field records-toolbar__field">
+                <span class="field__label">Üst kategori filtresi</span>
+                <select id="recordsCategoryFilter" class="field__input">
+                  <option value="">Tümü</option>
+                </select>
+              </label>
+            </div>
+            <p class="panel-lead panel-lead--after-toolbar">
+              Dönem üstteki ay seçicisiyle belirlenir. Satırda <strong>Düzenle</strong> ile güncelleyebilirsiniz.
+            </p>
+            <p class="empty" id="emptyState" hidden>
+              Bu dönemde kayıt yok. Eklemek için <strong>Yeni gider</strong> sekmesine geçin.
+            </p>
+            <ul class="expense-list" id="expenseList" role="list"></ul>
+          </section>
+        </main>
+      </div>
+
+      <div id="panel-expense" class="tab-panel" role="tabpanel" aria-labelledby="tab-expense" hidden>
+        <main class="main main--single">
+          <section class="card form-card" aria-labelledby="form-heading">
+            <h2 id="form-heading" class="card__title">Yeni harcama</h2>
+            <form class="form" id="expenseForm" novalidate>
+              <div class="form__row">
+                <label class="field">
+                  <span class="field__label">İşlem tarihi</span>
+                  <input class="field__input" type="date" name="date" id="date" required />
+                </label>
+                <label class="field">
+                  <span class="field__label">Tutar (₺)</span>
+                  <input
+                    class="field__input"
+                    type="number"
+                    name="amount"
+                    id="amount"
+                    min="0"
+                    step="0.01"
+                    inputmode="decimal"
+                    placeholder="0,00"
+                    required
+                  />
+                </label>
+              </div>
+              <div class="form__row form__row--tight">
+                <label class="field">
+                  <span class="field__label">Üst kategori</span>
+                  <select class="field__input" name="category" id="category"></select>
+                </label>
+                <label class="field">
+                  <span class="field__label">Alt kategori</span>
+                  <select class="field__input" name="subcategory" id="subcategory" disabled>
+                    <option value="">— Yok —</option>
+                  </select>
+                </label>
+              </div>
+              <label class="field field--full">
+                <span class="field__label">Harcama açıklaması</span>
+                <input
+                  class="field__input"
+                  type="text"
+                  name="description"
+                  id="description"
+                  maxlength="120"
+                  placeholder="Örn. market, ulaşım"
+                  autocomplete="off"
+                />
+              </label>
+              <div class="form__actions">
+                <button type="submit" class="btn btn--primary">Harcamayı kaydet</button>
+              </div>
+            </form>
+          </section>
+        </main>
+      </div>
+
+      <div id="panel-charts" class="tab-panel" role="tabpanel" aria-labelledby="tab-charts" hidden>
+        <main class="main charts-stack">
+          <section class="card chart-view-picker-card" aria-labelledby="chart-view-heading">
+            <div class="chart-view-picker-card__head">
+              <h2 id="chart-view-heading" class="card__title">Raporlar</h2>
+              <p class="charts-card__period charts-card__period--inline" id="chartPeriodLabel"></p>
+            </div>
+            <div
+              class="chart-view-pills"
+              id="chartViewPills"
+              role="tablist"
+              aria-label="Rapor türü"
+              aria-describedby="chartViewHint"
+            >
+              <button
+                type="button"
+                role="tab"
+                class="chart-view-pills__btn chart-view-pills__btn--active"
+                data-chart-view="month-pie"
+                aria-selected="true"
+                id="chartTab-month-pie"
+              >
+                <span class="chart-view-pills__icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 2v10h10A10 10 0 0012 2z" stroke-linejoin="round" />
+                    <path d="M12 12H2a10 10 0 0020 0" stroke-linejoin="round" />
+                  </svg>
+                </span>
+                <span class="chart-view-pills__label">Kategori Payları</span>
+              </button>
+              <button
+                type="button"
+                role="tab"
+                class="chart-view-pills__btn"
+                data-chart-view="month-bar"
+                aria-selected="false"
+                id="chartTab-month-bar"
+              >
+                <span class="chart-view-pills__icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+                    <rect x="4" y="14" width="4" height="6" rx="1" />
+                    <rect x="10" y="10" width="4" height="10" rx="1" />
+                    <rect x="16" y="6" width="4" height="14" rx="1" />
+                  </svg>
+                </span>
+                <span class="chart-view-pills__label">Kategori Karşılaştırması</span>
+              </button>
+              <button type="button" role="tab" class="chart-view-pills__btn" data-chart-view="trend" aria-selected="false" id="chartTab-trend">
+                <span class="chart-view-pills__icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M4 18V6M4 18h16M8 14l3-4 3 2 5-6" stroke-linecap="round" stroke-linejoin="round" />
+                  </svg>
+                </span>
+                <span class="chart-view-pills__label">6 Aylık Trend</span>
+              </button>
+              <button type="button" role="tab" class="chart-view-pills__btn" data-chart-view="sub" aria-selected="false" id="chartTab-sub">
+                <span class="chart-view-pills__icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 2L4 6v6c0 5 4 9 8 10 4-1 8-5 8-10V6l-8-4z" stroke-linejoin="round" />
+                    <path d="M8 10h8M8 14h5" stroke-linecap="round" />
+                  </svg>
+                </span>
+                <span class="chart-view-pills__label">Alt Kategori</span>
+              </button>
+              <button type="button" role="tab" class="chart-view-pills__btn" data-chart-view="budget" aria-selected="false" id="chartTab-budget">
+                <span class="chart-view-pills__icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="9" />
+                    <circle cx="12" cy="12" r="5" />
+                    <circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none" />
+                  </svg>
+                </span>
+                <span class="chart-view-pills__label">Limitler</span>
+              </button>
+            </div>
+            <p class="chart-view-picker__hint" id="chartViewHint"></p>
+          </section>
+
+          <p class="charts-empty charts-empty--banner" id="chartsLibError" hidden></p>
+
+          <section
+            class="card charts-card chart-view-panel"
+            id="chartPanelMonth"
+            hidden
+            aria-labelledby="chartMonthPanelHeading"
+          >
+            <h3 class="card__title card__title--flush" id="chartMonthPanelHeading"></h3>
+            <p class="charts-empty" id="chartEmptyStateMonth" hidden>
+              Bu dönemde veri yok. <strong>Yeni gider</strong> ile ekleyin veya dönemi değiştirin.
+            </p>
+            <div class="chart-block month-chart-block" id="monthPieBlock" hidden>
+              <h4 class="chart-block__title">Pay yüzdeleri (%)</h4>
+              <div class="chart-block__canvas chart-block__canvas--doughnut-month">
+                <canvas id="chartDoughnut" aria-label="Üst kategori pay yüzdeleri"></canvas>
+              </div>
+            </div>
+            <div class="chart-block month-chart-block" id="monthBarBlock" hidden>
+              <h4 class="chart-block__title">Harcama tutarları (₺)</h4>
+              <div class="chart-block__canvas chart-block__canvas--bar">
+                <canvas id="chartBar" aria-label="Üst kategori harcama tutarları"></canvas>
+              </div>
+            </div>
+            <div class="month-summary" id="monthCategorySummary" hidden>
+              <p class="month-summary__top" id="monthCategorySummaryLead"></p>
+              <ol class="month-summary__list" id="monthCategorySummaryList"></ol>
+            </div>
+          </section>
+
+          <section
+            class="card chart-extra-card chart-view-panel"
+            id="chartPanelTrend"
+            hidden
+            aria-labelledby="trend-heading"
+          >
+            <h2 id="trend-heading" class="card__title">Son 6 Aylık Gider Özeti</h2>
+            <p class="panel-lead panel-lead--tight">
+              Seçili döneme kadar geriye dönük altı ayın toplam gider tutarı (tüm üst kategoriler dahil).
+            </p>
+            <p class="charts-empty" id="trendEmptyState" hidden>Bu aralıkta veri bulunmamaktadır.</p>
+            <div class="chart-block__canvas chart-block__canvas--trend" id="trendChartWrap" hidden>
+              <canvas id="chartTrend" aria-label="Son altı ayın gider toplamları; çubuk üstünde tutar, tamamlanan aylar ay sonu tarihiyle"></canvas>
+            </div>
+          </section>
+
+          <section
+            class="card chart-extra-card chart-view-panel"
+            id="chartPanelSub"
+            hidden
+            aria-labelledby="subchart-heading"
+          >
+            <h2 id="subchart-heading" class="card__title">Alt kategori dağılımı</h2>
+            <p class="panel-lead panel-lead--tight">
+              Seçili dönemde bir üst kategorinin alt kırılımı; halka grafik.
+            </p>
+            <label class="field field--inline field--subchart-parent">
+              <span class="field__label">Üst kategori</span>
+              <select class="field__input" id="subChartParent"></select>
+            </label>
+            <p class="charts-empty" id="subChartEmpty" hidden>
+              Seçili dönem veya üst kategori için uygun kayıt bulunmamaktadır.
+            </p>
+            <div class="chart-block__canvas chart-block__canvas--sub" id="subChartWrap" hidden>
+              <p class="sub-chart-total" id="subChartTotalLine" hidden aria-live="polite"></p>
+              <canvas id="chartSub" aria-label="Alt kategori dağılımı"></canvas>
+            </div>
+          </section>
+
+          <section class="card budget-card chart-view-panel" id="chartPanelBudget" hidden aria-labelledby="budget-heading">
+            <h2 id="budget-heading" class="card__title">Üst limitler</h2>
+            <p class="panel-lead panel-lead--tight">
+              Üst kategori başına dönem <strong>maksimum gider (₺)</strong>. Hedef değil; aşımda gösterge uyarı verir.
+            </p>
+            <div id="budgetList" class="budget-list"></div>
+            <button type="button" class="btn btn--ghost budget-save-btn" id="saveBudgetsBtn">Limitleri kaydet</button>
+          </section>
+        </main>
+      </div>
+
+      <div id="panel-categories" class="tab-panel" role="tabpanel" aria-labelledby="tab-categories" hidden>
+        <main class="main main--single">
+          <section class="card cat-manage-card" aria-labelledby="cat-manage-heading">
+            <h2 id="cat-manage-heading" class="card__title">Kategoriler</h2>
+            <p class="cat-manage__hint">
+              Üst ve alt kategoriler burada tanımlanır; değişiklikler <strong>Yeni gider</strong>, <strong>Kayıtlar</strong> ve
+              <strong>Raporlar</strong> bölümlerine yansır.
+            </p>
+            <form class="cat-manage__add-parent" id="addParentCategoryForm">
+              <input
+                type="text"
+                id="newParentCategoryName"
+                class="field__input"
+                placeholder="Yeni üst kategori adı"
+                maxlength="60"
+                autocomplete="off"
+              />
+              <button type="submit" class="btn btn--ghost btn--small">Üst kategori ekle</button>
+            </form>
+            <ul class="cat-tree" id="categoryTree" role="list"></ul>
+          </section>
+        </main>
+      </div>
+
+      <footer class="app-footer">
+        <span class="app-footer__title">Veri işlemleri</span>
+        <div class="app-footer__actions">
+          <button type="button" class="btn btn--ghost btn--small" id="exportBtn" title="JSON dosyası indir">
+            Dışa aktar
+          </button>
+          <label class="btn btn--ghost btn--small import-label" title="JSON dosyası yükle">
+            İçe aktar
+            <input type="file" id="importInput" accept="application/json" hidden />
+          </label>
+        </div>
+        <p class="app-footer__hint" id="sqliteSyncHint" hidden></p>
+      </footer>
+    </div>
+
+    <div id="toast" class="toast" role="status" aria-live="polite" aria-atomic="true" hidden></div>
+
+    <dialog class="rename-dialog edit-expense-dialog" id="editExpenseDialog" aria-labelledby="editExpenseTitle">
+      <div class="rename-dialog__inner">
+        <h3 class="rename-dialog__title" id="editExpenseTitle">Kaydı düzenle</h3>
+        <form class="edit-expense-form" id="editExpenseForm" novalidate>
+          <input type="hidden" id="editExpenseId" />
+          <label class="field">
+            <span class="field__label">Tutar (₺)</span>
+            <input class="field__input" type="number" id="editAmount" min="0" step="0.01" required />
+          </label>
+          <label class="field">
+            <span class="field__label">Tarih</span>
+            <input class="field__input" type="date" id="editDate" required />
+          </label>
+          <label class="field">
+            <span class="field__label">Harcama açıklaması</span>
+            <input class="field__input" type="text" id="editDescription" maxlength="120" autocomplete="off" />
+          </label>
+          <label class="field">
+            <span class="field__label">Üst kategori</span>
+            <select class="field__input" id="editCategory"></select>
+          </label>
+          <label class="field">
+            <span class="field__label">Alt kategori</span>
+            <select class="field__input" id="editSubcategory" disabled>
+              <option value="">— Yok —</option>
+            </select>
+          </label>
+          <label class="field">
+            <span class="field__label">Ek not</span>
+            <textarea class="field__input field__input--textarea" id="editNote" rows="2" maxlength="300"></textarea>
+          </label>
+          <div class="rename-dialog__actions">
+            <button type="button" class="btn btn--ghost" id="editExpenseCancel">İptal</button>
+            <button type="submit" class="btn btn--primary" id="editExpenseSave">Değişiklikleri kaydet</button>
+          </div>
+        </form>
+      </div>
+    </dialog>
+
+    <dialog class="rename-dialog" id="renameDialog" aria-labelledby="renameDialogTitle">
+      <div class="rename-dialog__inner">
+        <h3 class="rename-dialog__title" id="renameDialogTitle">Adı değiştir</h3>
+        <label class="visually-hidden" for="renameDialogInput">Yeni tanım</label>
+        <input
+          type="text"
+          id="renameDialogInput"
+          class="field__input rename-dialog__input"
+          maxlength="60"
+          autocomplete="off"
+        />
+        <div class="rename-dialog__actions">
+          <button type="button" class="btn btn--ghost" id="renameDialogCancel">İptal</button>
+          <button type="button" class="btn btn--primary" id="renameDialogSave">Kaydet</button>
+        </div>
+      </div>
+    </dialog>
+
+    <script src="app.js?v=44" defer></script>
+  </body>
+</html>
