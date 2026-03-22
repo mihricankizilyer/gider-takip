@@ -19,9 +19,6 @@
       <header class="header">
         <div class="header__brand">
           <h1 class="header__title">Gider Takibi</h1>
-          <p class="header__subtitle">
-            Veriler yalnızca bu cihazda tutulur. Üstteki dönem seçimi tüm bölümlerde geçerlidir.
-          </p>
         </div>
         <div class="header__summary" id="summary">
           <div class="header__summary-grid">
@@ -111,12 +108,7 @@
                 </select>
               </label>
             </div>
-            <p class="panel-lead panel-lead--after-toolbar">
-              Dönem üstteki ay seçicisiyle belirlenir. Satırda <strong>Düzenle</strong> ile güncelleyebilirsiniz.
-            </p>
-            <p class="empty" id="emptyState" hidden>
-              Bu dönemde kayıt yok. Eklemek için <strong>Yeni gider</strong> sekmesine geçin.
-            </p>
+            <p class="empty" id="emptyState" hidden>Kayıt yok.</p>
             <ul class="expense-list" id="expenseList" role="list"></ul>
           </section>
         </main>
@@ -266,9 +258,7 @@
             aria-labelledby="chartMonthPanelHeading"
           >
             <h3 class="card__title card__title--flush" id="chartMonthPanelHeading"></h3>
-            <p class="charts-empty" id="chartEmptyStateMonth" hidden>
-              Bu dönemde veri yok. <strong>Yeni gider</strong> ile ekleyin veya dönemi değiştirin.
-            </p>
+            <p class="charts-empty" id="chartEmptyStateMonth" hidden>Veri yok.</p>
             <div class="chart-block month-chart-block" id="monthPieBlock" hidden>
               <h4 class="chart-block__title">Pay yüzdeleri (%)</h4>
               <div class="chart-block__canvas chart-block__canvas--doughnut-month">
@@ -294,12 +284,9 @@
             aria-labelledby="trend-heading"
           >
             <h2 id="trend-heading" class="card__title">Son 6 Aylık Gider Özeti</h2>
-            <p class="panel-lead panel-lead--tight">
-              Seçili döneme kadar geriye dönük altı ayın toplam gider tutarı (tüm üst kategoriler dahil).
-            </p>
-            <p class="charts-empty" id="trendEmptyState" hidden>Bu aralıkta veri bulunmamaktadır.</p>
+            <p class="charts-empty" id="trendEmptyState" hidden>Veri yok.</p>
             <div class="chart-block__canvas chart-block__canvas--trend" id="trendChartWrap" hidden>
-              <canvas id="chartTrend" aria-label="Son altı ayın gider toplamları; çubuk üstünde tutar, tamamlanan aylar ay sonu tarihiyle"></canvas>
+              <canvas id="chartTrend" aria-label="Son altı ay gider"></canvas>
             </div>
           </section>
 
@@ -310,16 +297,11 @@
             aria-labelledby="subchart-heading"
           >
             <h2 id="subchart-heading" class="card__title">Alt kategori dağılımı</h2>
-            <p class="panel-lead panel-lead--tight">
-              Seçili dönemde bir üst kategorinin alt kırılımı; halka grafik.
-            </p>
             <label class="field field--inline field--subchart-parent">
               <span class="field__label">Üst kategori</span>
               <select class="field__input" id="subChartParent"></select>
             </label>
-            <p class="charts-empty" id="subChartEmpty" hidden>
-              Seçili dönem veya üst kategori için uygun kayıt bulunmamaktadır.
-            </p>
+            <p class="charts-empty" id="subChartEmpty" hidden>Kayıt yok.</p>
             <div class="chart-block__canvas chart-block__canvas--sub" id="subChartWrap" hidden>
               <p class="sub-chart-total" id="subChartTotalLine" hidden aria-live="polite"></p>
               <canvas id="chartSub" aria-label="Alt kategori dağılımı"></canvas>
@@ -328,9 +310,6 @@
 
           <section class="card budget-card chart-view-panel" id="chartPanelBudget" hidden aria-labelledby="budget-heading">
             <h2 id="budget-heading" class="card__title">Üst limitler</h2>
-            <p class="panel-lead panel-lead--tight">
-              Üst kategori başına dönem <strong>maksimum gider (₺)</strong>. Hedef değil; aşımda gösterge uyarı verir.
-            </p>
             <div id="budgetList" class="budget-list"></div>
             <button type="button" class="btn btn--ghost budget-save-btn" id="saveBudgetsBtn">Limitleri kaydet</button>
           </section>
@@ -341,10 +320,6 @@
         <main class="main main--single">
           <section class="card cat-manage-card" aria-labelledby="cat-manage-heading">
             <h2 id="cat-manage-heading" class="card__title">Kategoriler</h2>
-            <p class="cat-manage__hint">
-              Üst ve alt kategoriler burada tanımlanır; değişiklikler <strong>Yeni gider</strong>, <strong>Kayıtlar</strong> ve
-              <strong>Raporlar</strong> bölümlerine yansır.
-            </p>
             <form class="cat-manage__add-parent" id="addParentCategoryForm">
               <input
                 type="text"
@@ -372,7 +347,6 @@
             <input type="file" id="importInput" accept="application/json" hidden />
           </label>
         </div>
-        <p class="app-footer__hint" id="sqliteSyncHint" hidden></p>
       </footer>
     </div>
 

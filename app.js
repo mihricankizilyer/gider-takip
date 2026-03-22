@@ -3,10 +3,7 @@ const CATEGORIES_KEY = "gider-takip-categories-v1";
 const BUDGET_KEY = "gider-takip-budgets-v1";
 const CHART_VIEW_KEY = "gider-takip-chart-view-v1";
 const CHART_VIEW_IDS = ["month-pie", "month-bar", "trend", "sub", "budget"];
-/** Sunucuda bu dosya varsa (index ile aynı klasör), her ziyaretçi aynı dışa aktarım verisini görür. */
 const SHARED_BUNDLE_FILENAME = "paylasilan-veri.json";
-
-/** baslat.bat ile açılan FastAPI+SQLite sunucusunda true; /api/bundle ile yükleme ve kayıtta otomatik PUT. */
 let serverSqliteSync = false;
 let serverPushTimer = null;
 
@@ -159,7 +156,6 @@ const summaryPeriodHint = document.getElementById("summaryPeriodHint");
 const filterMonth = document.getElementById("filterMonth");
 const exportBtn = document.getElementById("exportBtn");
 const importInput = document.getElementById("importInput");
-const sqliteSyncHint = document.getElementById("sqliteSyncHint");
 const chartPeriodLabel = document.getElementById("chartPeriodLabel");
 const chartViewPills = document.getElementById("chartViewPills");
 const chartViewHint = document.getElementById("chartViewHint");
@@ -330,7 +326,6 @@ function syncExpenseDateToSelectedMonth() {
   dateInput.value = defaultDateForSelectedMonth(filterMonth.value);
 }
 
-/** Ay filtresini bir ay geri veya ileri alır; grafik ve kayıtlar buna göre güncellenir */
 function shiftFilterMonth(deltaMonths) {
   const raw = filterMonth?.value;
   if (!raw || !/^\d{4}-\d{2}$/.test(raw)) return;
@@ -419,7 +414,6 @@ function shortMonthLabel(monthStr) {
   return new Intl.DateTimeFormat("tr-TR", { month: "short", year: "2-digit" }).format(d);
 }
 
-/** Trend ekseni: seçili aydan önceki dönemler ay sonu tarihiyle (tam kapanmış ay). */
 function trendChartAxisLabel(monthStr, reportMonthStr) {
   if (!monthStr || !/^\d{4}-\d{2}$/.test(monthStr)) return monthStr;
   if (!reportMonthStr || monthStr >= reportMonthStr) return shortMonthLabel(monthStr);
@@ -476,7 +470,6 @@ function destroyMainMonthCharts() {
   }
 }
 
-/** Seçili ay üst kategorileri harcamaya göre (yüksekten düşüğe) özetler. */
 function updateMonthCategorySummary(pie) {
   if (!monthCategorySummary || !monthCategorySummaryLead || !monthCategorySummaryList) return;
   if (!pie?.labels?.length) {
@@ -541,7 +534,6 @@ function chartTooltipLabel(context) {
   return `${label}: ${formatMoney(n)}`;
 }
 
-/** Trend: ipucunda yalnızca veri dizisindeki kesin tutar (₺, iki ondalık); eksen yuvarlak gösterge olabilir. */
 function chartTrendTooltipCallbacks() {
   return {
     title: () => "",
@@ -554,7 +546,6 @@ function chartTrendTooltipCallbacks() {
 
 let percentLabelsPluginRegistered = false;
 
-/** Pasta/halka ve çubuklarda yüzde; trend çubuğunda aylık toplam tutar (₺). */
 const percentLabelsPlugin = {
   id: "percentLabels",
   afterDatasetsDraw(chart) {
@@ -617,14 +608,12 @@ const percentLabelsPlugin = {
         if (ulen < 1e-6) return;
         ux /= ulen;
         uy /= ulen;
-        /** Çizgiyi dilim gövdesinden başlatma; dış çemberin hemen dışında başlar (üst üste binmeyi azaltır). */
         const outerR =
           typeof arc.outerRadius === "number" && arc.outerRadius > 0 ? arc.outerRadius : ulen;
         const outset = 6;
         const tip = { x: cx + ux * (outerR + outset), y: cy + uy * (outerR + outset) };
 
         const area = chart.chartArea;
-        /** Alt yarıda düz radyal çizgi lejanta doğru iner; yatay dirsek ile etiketi halkanın hizasında tut. */
         const useElbowDown = uy > 0.16;
 
         ctx.strokeStyle = "rgba(167, 139, 250, 0.55)";
@@ -1829,9 +1818,7 @@ async function pushBundleToServerQuiet() {
       body: JSON.stringify(buildExportBundleForServer()),
     });
     if (!r.ok) throw new Error(String(r.status));
-  } catch {
-    /* sunucu kapalı veya hata — yerel kayıt yine de geçerli */
-  }
+  } catch {}
 }
 
 function schedulePushToServer() {
@@ -1842,7 +1829,6 @@ function schedulePushToServer() {
   }, 900);
 }
 
-/** Aynı kök adreste SQLite API varsa bundle yüklenir (paylasilan-veri.json’dan önce). */
 async function tryLoadApiBundle() {
   try {
     const url = new URL("/api/bundle", window.location.href);
@@ -2038,17 +2024,8 @@ async function initApp() {
   refreshCategorySelects();
   setChartView(loadChartViewPreference());
   render();
-  if (sqliteSyncHint) {
-    sqliteSyncHint.textContent = serverSqliteSync
-      ? "SQLite sunucusu bağlı: bu adresten giren herkes aynı veriyi görür; değişiklikler kısa gecikmeyle veritabanına yazılır."
-      : "";
-    sqliteSyncHint.hidden = !serverSqliteSync;
-  }
-  if (apiLoaded) {
-    showToast("Veriler SQLite veritabanından yüklendi.");
-  } else if (sharedOk) {
-    showToast("Paylaşılan veri yüklendi; aynı linkte herkes bu kayıtları görür.");
-  }
+  if (apiLoaded) showToast("Veritabanından yüklendi.");
+  else if (sharedOk) showToast("Paylaşılan veri yüklendi.");
 }
 
 initApp();

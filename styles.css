@@ -1075,7 +1075,6 @@ body::after {
   min-height: 200px;
 }
 
-/* İki sınıf: genel .chart-block__canvas yüksekliğini ezmek için (kural sırası + özgüllük). */
 .chart-block__canvas.chart-block__canvas--sub {
   display: flex;
   flex-direction: column;
@@ -1089,7 +1088,6 @@ body::after {
   width: 100%;
 }
 
-/* Üst kategori halka: alt kategori grafiğiyle aynı dış etiket düzeni için yeterli yükseklik */
 .chart-block__canvas.chart-block__canvas--doughnut-month {
   display: flex;
   flex-direction: column;
